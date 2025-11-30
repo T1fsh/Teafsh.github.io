@@ -1,0 +1,278 @@
+/* --- 变量定义 (方便以后一键换肤) --- */
+:root {
+    --bg-color: #0D0D11;         /* 深邃虚空黑 */
+    --accent-color: #00FF94;     /* 霓虹抹茶绿 */
+    --secondary-color: #00D2FF;  /* 电光青 */
+    --text-color: #E0E0E0;       /* 云雾灰 */
+    --glass-bg: rgba(255, 255, 255, 0.03);
+    --glass-border: rgba(255, 255, 255, 0.1);
+}
+
+/* --- 全局重置 --- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'JetBrains Mono', monospace; /* 极客代码风字体 */
+    overflow-x: hidden; /* 防止横向滚动条 */
+    line-height: 1.6;
+}
+
+/* --- 动态背景 Canvas --- */
+#canvas-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    opacity: 0.6;
+    pointer-events: none; /* 让鼠标事件穿透画布，不影响点击按钮 */
+}
+
+/* --- 导航栏 --- */
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem 5%;
+    backdrop-filter: blur(10px); /* 顶部导航自带毛玻璃 */
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 100;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo-img {
+    height: 40px;
+    width: auto;
+    /* filter: invert(1); */ /* 如果Logo是黑色的，取消注释这行使其变白 */
+}
+
+.logo-text {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--accent-color);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+.nav-links a {
+    color: var(--text-color);
+    text-decoration: none;
+    margin-left: 2rem;
+    font-size: 0.9rem;
+    position: relative;
+    transition: 0.3s;
+}
+
+.nav-links a:hover {
+    color: var(--accent-color);
+    text-shadow: 0 0 10px var(--accent-color);
+}
+
+/* --- 主要布局 --- */
+main {
+    padding: 150px 5% 50px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* --- Hero 区域 --- */
+.hero {
+    height: 80vh; /* 占据屏幕高度的80% */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+h1 {
+    font-family: 'Unbounded', sans-serif;
+    font-size: clamp(3rem, 8vw, 6rem); /* 响应式字体大小 */
+    line-height: 1.1;
+    margin-bottom: 20px;
+    /* 渐变文字效果 */
+    background: linear-gradient(90deg, #fff, var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.slogan {
+    font-size: 1.2rem;
+    color: var(--accent-color);
+    margin-bottom: 40px;
+    border-left: 3px solid var(--accent-color);
+    padding-left: 20px;
+    min-height: 1.6em; /* 防止文字没出来时高度塌陷 */
+}
+
+/* 光标闪烁效果 */
+.slogan::after {
+    content: '|';
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
+/* --- 酷炫按钮 --- */
+.cta-btn {
+    padding: 15px 40px;
+    background: transparent;
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    font-family: 'Unbounded', sans-serif;
+    font-weight: bold;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    transition: 0.4s;
+    text-decoration: none;
+    display: inline-block;
+}
+
+/* 按钮的滑光背景 */
+.cta-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: var(--accent-color);
+    z-index: -1;
+    transition: 0.4s;
+}
+
+.cta-btn:hover::before {
+    left: 0;
+}
+
+.cta-btn:hover {
+    color: #000;
+    box-shadow: 0 0 20px var(--accent-color);
+}
+
+/* --- 心得卡片区 --- */
+.section-title {
+    font-family: 'Unbounded', sans-serif;
+    font-size: 2rem;
+    margin-bottom: 40px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.section-title::before {
+    content: '';
+    width: 10px;
+    height: 10px;
+    background: var(--accent-color);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--accent-color);
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+/* 卡片样式 */
+.card {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    padding: 30px;
+    border-radius: 15px;
+    transition: 0.4s ease;
+    position: relative;
+    backdrop-filter: blur(5px);
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-10px);
+    border-color: var(--accent-color);
+    box-shadow: 0 10px 30px rgba(0, 255, 148, 0.1);
+}
+
+.card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    font-family: 'Unbounded', sans-serif;
+    color: #fff;
+}
+
+.card p {
+    font-size: 0.9rem;
+    color: #aaa;
+    margin-bottom: 20px;
+}
+
+/* 标签样式 */
+.tags {
+    display: flex;
+    gap: 10px;
+}
+
+.tag {
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    border: 1px solid var(--secondary-color);
+    color: var(--secondary-color);
+    border-radius: 20px;
+}
+
+/* --- 页脚 --- */
+footer {
+    margin-top: 100px;
+    padding: 50px 5%;
+    border-top: 1px solid var(--glass-border);
+    text-align: center;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+/* --- 移动端适配 --- */
+@media (max-width: 768px) {
+    h1 { font-size: 3rem; }
+    .hero { height: auto; padding: 100px 0; }
+    .nav-links { display: none; } /* 移动端暂时隐藏菜单，实际开发可做汉堡菜单 */
+}
+
+/* --- 底部隐蔽入口样式 --- */
+.system-entry {
+    margin-top: 15px;
+}
+
+.admin-link {
+    color: #333; /* 平时颜色很深，接近背景色，不易察觉 */
+    text-decoration: none;
+    font-size: 0.7rem;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.4s ease;
+    opacity: 0.5;
+}
+
+.admin-link:hover {
+    color: var(--accent-color); /* 悬停时变成霓虹绿 */
+    opacity: 1;
+    letter-spacing: 2px; /* 悬停时字间距拉大，产生动态感 */
+    text-shadow: 0 0 8px var(--accent-color); /* 发光效果 */
+}

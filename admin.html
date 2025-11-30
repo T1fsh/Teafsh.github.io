@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teafsh Console | Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Unbounded:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* 复用之前的样式，新增列表样式 */
+        .container { max-width: 800px; margin: 50px auto; padding: 0 20px; }
+
+        .panel-box {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid #333;
+            backdrop-filter: blur(10px);
+            margin-bottom: 30px;
+        }
+
+        .panel-box h2 {
+            font-family: 'Unbounded';
+            color: var(--secondary-color);
+            margin-bottom: 20px;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+
+        /* 隐藏编辑器，登录后显示 */
+        #dashboard { display: none; }
+
+        input, textarea {
+            width: 100%;
+            background: #0D0D11;
+            border: 1px solid #333;
+            color: var(--text-color);
+            padding: 12px;
+            margin-bottom: 15px;
+            font-family: 'JetBrains Mono';
+            border-radius: 6px;
+        }
+
+        input:focus, textarea:focus { outline: none; border-color: var(--accent-color); }
+        textarea { height: 100px; resize: vertical; }
+
+        /* 文章列表样式 */
+        .post-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #222;
+            transition: 0.3s;
+        }
+        .post-item:last-child { border-bottom: none; }
+        .post-item:hover { background: rgba(255, 255, 255, 0.02); }
+
+        .post-info h4 { margin-bottom: 5px; color: #fff; }
+        .post-info span { font-size: 0.8rem; color: #666; }
+
+        .btn-delete {
+            background: transparent;
+            border: 1px solid #ff4757;
+            color: #ff4757;
+            padding: 5px 15px;
+            font-family: 'JetBrains Mono';
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: 0.3s;
+        }
+        .btn-delete:hover { background: #ff4757; color: #fff; }
+
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="logo-container">
+        <span class="logo-text">Teafsh.</span>
+        <span style="color:#666; margin-left:10px;">// SYSTEM CONSOLE</span>
+    </div>
+</nav>
+
+<div class="container">
+    <div id="login-panel" class="panel-box" style="max-width: 400px; margin: 100px auto;">
+        <h2>Identity Verification</h2>
+        <input type="email" id="email" placeholder="Admin Email">
+        <input type="password" id="password" placeholder="Passkey">
+        <button onclick="login()" class="cta-btn" style="width:100%">ACCESS SYSTEM</button>
+    </div>
+
+    <div id="dashboard">
+        <div class="panel-box">
+            <h2>New Transmission</h2>
+            <input type="text" id="post-title" placeholder="Title">
+            <textarea id="post-summary" placeholder="Summary (for homepage card)"></textarea>
+            <input type="text" id="post-tags" placeholder="Tags (e.g. #React #AI)">
+            <textarea id="post-content" style="height: 200px;" placeholder="Full Content..."></textarea>
+            <button onclick="publishPost()" class="cta-btn">UPLOAD DATA</button>
+            <p id="status-msg" style="margin-top:10px; color: var(--accent-color); font-size: 0.9rem;"></p>
+        </div>
+
+        <div class="panel-box">
+            <h2>Transmission Log (Manage Posts)</h2>
+            <div id="post-list">
+                <p style="color:#666;">Loading data stream...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 替换你的 Key ---
+    const SUPABASE_URL = 'https://jdevfxwclgiprzlpjwax.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_qSuUKVirzbKfMCCipZMLlw_vjnQHbMj';
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // --- 1. 登录 ---
+    async function login() {
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        const { data, error } = await client.auth.signInWithPassword({
+            email: email,
+            password: password,
+        })
+
+        if (error) {
+            alert('Access Denied: ' + error.message);
+        } else {
+            // 切换界面
+            document.getElementById('login-panel').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+            // 登录成功后，立刻加载列表
+            loadAdminPosts();
+        }
+    }
+
+    // --- 2. 发布 ---
+    async function publishPost() {
+        const title = document.getElementById('post-title').value;
+        const summary = document.getElementById('post-summary').value;
+        const tags = document.getElementById('post-tags').value;
+        const content = document.getElementById('post-content').value;
+
+        if(!title) return alert("Title required.");
+
+        const { error } = await client
+            .from('posts')
+            .insert({ title, summary, tags, content });
+
+        if (error) {
+            alert('Error: ' + error.message);
+        } else {
+            document.getElementById('status-msg').innerText = "SUCCESS: Upload complete.";
+            // 清空输入框
+            document.getElementById('post-title').value = '';
+            document.getElementById('post-summary').value = '';
+            document.getElementById('post-content').value = '';
+
+            // 发布完，刷新下方的列表
+            loadAdminPosts();
+
+            // 3秒后清除成功提示
+            setTimeout(() => document.getElementById('status-msg').innerText = "", 3000);
+        }
+    }
+
+    // --- 3. 加载管理列表 ---
+    async function loadAdminPosts() {
+        const listContainer = document.getElementById('post-list');
+
+        // 获取所有文章 (只取 id, title, created_at 用于列表显示)
+        const { data: posts, error } = await client
+            .from('posts')
+            .select('id, title, created_at')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            listContainer.innerHTML = `<p style="color:red">Error fetching logs: ${error.message}</p>`;
+            return;
+        }
+
+        if (posts.length === 0) {
+            listContainer.innerHTML = `<p style="color:#666">No transmissions found.</p>`;
+            return;
+        }
+
+        // 渲染 HTML
+        listContainer.innerHTML = posts.map(post => {
+            // 格式化时间
+            const date = new Date(post.created_at).toLocaleDateString();
+            return `
+                    <div class="post-item">
+                        <div class="post-info">
+                            <h4>${post.title}</h4>
+                            <span>${date} | ID: ${post.id}</span>
+                        </div>
+                        <button onclick="deletePost(${post.id})" class="btn-delete">TERMINATE</button>
+                    </div>
+                `;
+        }).join('');
+    }
+
+    // --- 4. 删除文章 ---
+    async function deletePost(id) {
+        if (!confirm('CONFIRM TERMINATION? This action is irreversible.')) return;
+
+        const { error } = await client
+            .from('posts')
+            .delete()
+            .eq('id', id);
+
+        if (error) {
+            alert('Deletion Failed: ' + error.message);
+        } else {
+            // 删除成功，刷新列表
+            loadAdminPosts();
+        }
+    }
+</script>
+</body>
+</html>
